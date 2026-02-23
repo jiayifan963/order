@@ -8,13 +8,17 @@
         body { font-family: -apple-system, sans-serif; background: #f0f4f8; padding: 20px; color: #333; }
         .card { background: white; max-width: 450px; margin: 0 auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
+        .section-label { font-weight: bold; margin-bottom: 8px; display: block; color: #555; }
         .day-box { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #1a73e8; }
         .no-service { border-left: 5px solid #ccc; background: #eee; color: #777; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
-        select, input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .date-tag { font-size: 0.9em; color: #1a73e8; margin-left: 5px; font-weight: normal; }
+        select, input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; background: white; }
         .custom-name-box { margin-top: 10px; display: none; background: #fffde7; padding: 10px; border-radius: 8px; border: 1px dashed #fbc02d; }
         .total-box { text-align: right; font-size: 1.2em; font-weight: bold; color: #d93025; margin: 20px 0; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; background: #1a73e8; color: white; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn:disabled { background: #ccc; }
+        .week-selector { background: #e7f3ff; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #1a73e8; }
     </style>
 </head>
 <body>
@@ -22,12 +26,11 @@
 <div class="card">
     <h2>📅 國中生週點餐</h2>
     
-    <div style="margin-bottom: 20px;">
-        <label>你的姓名</label>
+    <div style="margin-bottom: 15px;">
+        <span class="section-label">你的姓名</span>
         <select id="studentName" onchange="checkCustomName()">
             <option value="">-- 請選擇 --</option>
             <option value="志宇">志宇</option>
-            <option value="宇廷">宇廷</option>
             <option value="子翊">子翊</option>
             <option value="紳豪">紳豪</option>
             <option value="韻安">韻安</option>
@@ -38,28 +41,37 @@
             <option value="建億">建億</option>
             <option value="妍汝">妍汝</option>
             <option value="昊謙">昊謙</option>
-            <option value="昊謙">東霖</option>
+            <option value="東霖">東霖</option>
             <option value="CUSTOM">➕ 手動輸入姓名...</option>
         </select>
-        
         <div id="customNameBox" class="custom-name-box">
             <input type="text" id="customNameInput" placeholder="請輸入您的名字">
         </div>
     </div>
 
+    <div class="week-selector">
+        <span class="section-label">選擇訂餐週次</span>
+        <select id="weekSelect" onchange="setDates()">
+            <option value="0">本週</option>
+            <option value="1">下週</option>
+            <option value="2">下下週</option>
+            <option value="3">第四週</option>
+        </select>
+    </div>
+
     <div id="orderList">
-        <div class="day-box"><label>週一餐點</label>
+        <div class="day-box"><label>週一 <span class="date-tag" id="date-mon"></span></label>
             <select class="day-sel" id="mon" onchange="updateTotal()">
                 <option value="不訂餐">不訂餐</option>
                 <option value="餐盒">餐盒 ($70)</option>
             </select>
         </div>
-        <div class="day-box no-service"><label>週二餐點</label>
+        <div class="day-box no-service"><label>週二 <span class="date-tag" id="date-tue"></span></label>
             <select class="day-sel" id="tue" disabled>
                 <option value="今日不供餐">今日不供餐</option>
             </select>
         </div>
-        <div class="day-box"><label>週三餐點</label>
+        <div class="day-box"><label>週三 <span class="date-tag" id="date-wed"></span></label>
             <select class="day-sel" id="wed" onchange="updateTotal()">
                 <option value="不訂餐">不訂餐</option>
                 <option value="乾關東煮">乾關東煮 ($70)</option>
@@ -67,13 +79,13 @@
                 <option value="滷肉飯">滷肉飯 ($70)</option>
             </select>
         </div>
-        <div class="day-box"><label>週四餐點</label>
+        <div class="day-box"><label>週四 <span class="date-tag" id="date-thu"></span></label>
             <select class="day-sel" id="thu" onchange="updateTotal()">
                 <option value="不訂餐">不訂餐</option>
                 <option value="餐盒">餐盒 ($70)</option>
             </select>
         </div>
-        <div class="day-box"><label>週五餐點</label>
+        <div class="day-box"><label>週五 <span class="date-tag" id="date-fri"></span></label>
             <select class="day-sel" id="fri" onchange="updateTotal()">
                 <option value="不訂餐">不訂餐</option>
                 <option value="餐盒">餐盒 ($70)</option>
@@ -81,14 +93,38 @@
         </div>
     </div>
 
-    <div class="total-box">本週總計：$<span id="totalText">0</span></div>
+    <div class="total-box">該週總計：$<span id="totalText">0</span></div>
     
-    <button class="btn" id="subBtn" onclick="submitData()">🚀 提交整週訂單</button>
+    <button class="btn" id="subBtn" onclick="submitData()">🚀 提交該週訂單</button>
 </div>
 
 <script>
-    // ⚠️ 請填入您的 Apps Script 部署網址
     const webAppUrl = "https://script.google.com/macros/s/AKfycbzj5oVJVqNH7WEqirF--tWVLxofs6IuYzRQ1r5UG25-EMenJKSdmab-JEumdqEdQCbkkw/exec";
+
+    // 自動計算日期
+    function setDates() {
+        const now = new Date();
+        const weekOffset = parseInt(document.getElementById('weekSelect').value);
+        const dayOfWeek = now.getDay(); 
+        
+        // 算出該週週一
+        // 如果是週日(0)，算作本週
+        const diffToMon = (dayOfWeek === 0 ? 1 : 1 - dayOfWeek) + (weekOffset * 7);
+        const baseDate = new Date(now);
+        baseDate.setDate(now.getDate() + diffToMon);
+
+        const ids = ['mon', 'tue', 'wed', 'thu', 'fri'];
+        ids.forEach((id, index) => {
+            const targetDate = new Date(baseDate);
+            targetDate.setDate(baseDate.getDate() + index);
+            const m = targetDate.getMonth() + 1;
+            const d = targetDate.getDate();
+            document.getElementById('date-' + id).innerText = `(${m}/${d})`;
+        });
+    }
+
+    // 初始化日期
+    setDates();
 
     function checkCustomName() {
         const sel = document.getElementById('studentName');
@@ -112,12 +148,15 @@
         if (finalName === "CUSTOM") finalName = document.getElementById('customNameInput').value.trim();
         if (!finalName) return alert("請選擇或輸入姓名！");
 
+        const weekLabel = document.getElementById('weekSelect').options[document.getElementById('weekSelect').selectedIndex].text;
+        
         const btn = document.getElementById('subBtn');
         btn.disabled = true;
         btn.innerText = "傳送中...";
 
         const params = new URLSearchParams({
             name: finalName,
+            week: weekLabel, // 傳送是哪一週 (本週/下週...)
             mon: document.getElementById('mon').value,
             tue: document.getElementById('tue').value,
             wed: document.getElementById('wed').value,
@@ -128,7 +167,7 @@
 
         fetch(webAppUrl + "?" + params.toString(), { mode: 'no-cors' })
         .then(() => {
-            alert("✅ " + finalName + "，本週點餐成功！");
+            alert("✅ " + finalName + "，" + weekLabel + "點餐成功！");
             location.reload();
         })
         .catch(err => {
