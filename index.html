@@ -62,8 +62,8 @@
     <div id="orderList">
         <div class="day-box"><label>週一 <span class="date-tag" id="date-mon"></span></label>
             <select class="day-sel" id="mon" onchange="updateTotal()">
+                <option value="餐盒" selected>餐盒 ($70)</option>
                 <option value="不訂餐">不訂餐</option>
-                <option value="餐盒">餐盒 ($70)</option>
             </select>
         </div>
         <div class="day-box no-service"><label>週二 <span class="date-tag" id="date-tue"></span></label>
@@ -73,7 +73,7 @@
         </div>
         <div class="day-box"><label>週三 <span class="date-tag" id="date-wed"></span></label>
             <select class="day-sel" id="wed" onchange="updateTotal()">
-                <option value="不訂餐">不訂餐</option>
+                <option value="不訂餐" selected>不訂餐</option>
                 <option value="乾關東煮">乾關東煮 ($70)</option>
                 <option value="湯關東煮">湯關東煮 ($70)</option>
                 <option value="滷肉飯">滷肉飯 ($70)</option>
@@ -81,19 +81,19 @@
         </div>
         <div class="day-box"><label>週四 <span class="date-tag" id="date-thu"></span></label>
             <select class="day-sel" id="thu" onchange="updateTotal()">
+                <option value="餐盒" selected>餐盒 ($70)</option>
                 <option value="不訂餐">不訂餐</option>
-                <option value="餐盒">餐盒 ($70)</option>
             </select>
         </div>
         <div class="day-box"><label>週五 <span class="date-tag" id="date-fri"></span></label>
             <select class="day-sel" id="fri" onchange="updateTotal()">
+                <option value="餐盒" selected>餐盒 ($70)</option>
                 <option value="不訂餐">不訂餐</option>
-                <option value="餐盒">餐盒 ($70)</option>
             </select>
         </div>
     </div>
 
-    <div class="total-box">該週總計：$<span id="totalText">0</span></div>
+    <div class="total-box">該週總計：$<span id="totalText">210</span></div>
     
     <button class="btn" id="subBtn" onclick="submitData()">🚀 提交該週訂單</button>
 </div>
@@ -101,14 +101,25 @@
 <script>
     const webAppUrl = "https://script.google.com/macros/s/AKfycbzj5oVJVqNH7WEqirF--tWVLxofs6IuYzRQ1r5UG25-EMenJKSdmab-JEumdqEdQCbkkw/exec";
 
-    // 自動計算日期
+    // 自動計算日期與判斷初始週次
+    function init() {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); 
+        
+        // 智慧判斷：週四(4)到週日(0)預設選「下週」
+        if (dayOfWeek === 4 || dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0) {
+            document.getElementById('weekSelect').value = "1";
+        }
+        
+        setDates();
+        updateTotal();
+    }
+
     function setDates() {
         const now = new Date();
         const weekOffset = parseInt(document.getElementById('weekSelect').value);
         const dayOfWeek = now.getDay(); 
         
-        // 算出該週週一
-        // 如果是週日(0)，算作本週
         const diffToMon = (dayOfWeek === 0 ? 1 : 1 - dayOfWeek) + (weekOffset * 7);
         const baseDate = new Date(now);
         baseDate.setDate(now.getDate() + diffToMon);
@@ -122,9 +133,6 @@
             document.getElementById('date-' + id).innerText = `(${m}/${d})`;
         });
     }
-
-    // 初始化日期
-    setDates();
 
     function checkCustomName() {
         const sel = document.getElementById('studentName');
@@ -156,7 +164,7 @@
 
         const params = new URLSearchParams({
             name: finalName,
-            week: weekLabel, // 傳送是哪一週 (本週/下週...)
+            week: weekLabel,
             mon: document.getElementById('mon').value,
             tue: document.getElementById('tue').value,
             wed: document.getElementById('wed').value,
@@ -175,6 +183,9 @@
             btn.disabled = false;
         });
     }
+
+    // 啟動初始化
+    init();
 </script>
 
 </body>
