@@ -28,7 +28,7 @@
     
     <div style="margin-bottom: 15px;">
         <span class="section-label">你的姓名</span>
-        <select id="studentName" onchange="checkCustomName()">
+        <select id="studentName" onchange="checkCustomName(); loadPreferences();">
             <option value="">-- 請選擇 --</option>
             <option value="志宇">志宇</option>
             <option value="子翊">子翊</option>
@@ -102,16 +102,12 @@
 <script>
     const webAppUrl = "https://script.google.com/macros/s/AKfycbzj5oVJVqNH7WEqirF--tWVLxofs6IuYzRQ1r5UG25-EMenJKSdmab-JEumdqEdQCbkkw/exec";
 
-    // 自動計算日期與判斷初始週次
     function init() {
         const now = new Date();
         const dayOfWeek = now.getDay(); 
-        
-        // 智慧判斷：週四(4)到週日(0)預設選「下週」
         if (dayOfWeek === 4 || dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0) {
             document.getElementById('weekSelect').value = "1";
         }
-        
         setDates();
         updateTotal();
     }
@@ -120,7 +116,6 @@
         const now = new Date();
         const weekOffset = parseInt(document.getElementById('weekSelect').value);
         const dayOfWeek = now.getDay(); 
-        
         const diffToMon = (dayOfWeek === 0 ? 1 : 1 - dayOfWeek) + (weekOffset * 7);
         const baseDate = new Date(now);
         baseDate.setDate(now.getDate() + diffToMon);
@@ -141,6 +136,28 @@
         box.style.display = (sel.value === "CUSTOM") ? "block" : "none";
     }
 
+    // --- 新增：帶入上次紀錄功能 ---
+    function loadPreferences() {
+        const name = document.getElementById('studentName').value;
+        if (!name || name === "CUSTOM") return;
+
+        const savedData = localStorage.getItem('order_cache_' + name);
+        if (savedData) {
+            const prefs = JSON.parse(savedData);
+            if (confirm('偵測到 ' + name + ' 有上次的點餐習慣，要自動填入嗎？')) {
+                const days = ['mon', 'wed', 'thu', 'fri']; // 週二不供餐不計入
+                days.forEach(day => {
+                    if (prefs[day]) {
+                        const sel = document.getElementById(day);
+                        if (sel) sel.value = prefs[day];
+                    }
+                });
+                updateTotal();
+                alert('已自動填入！');
+            }
+        }
+    }
+
     function updateTotal() {
         let total = 0;
         const selects = document.querySelectorAll('.day-sel');
@@ -158,8 +175,16 @@
         if (!finalName) return alert("請選擇或輸入姓名！");
 
         const weekLabel = document.getElementById('weekSelect').options[document.getElementById('weekSelect').selectedIndex].text;
-        
         const btn = document.getElementById('subBtn');
+        
+        // --- 新增：儲存這次的點餐紀錄到瀏覽器 ---
+        const days = ['mon', 'wed', 'thu', 'fri'];
+        const currentPrefs = {};
+        days.forEach(day => {
+            currentPrefs[day] = document.getElementById(day).value;
+        });
+        localStorage.setItem('order_cache_' + finalName, JSON.stringify(currentPrefs));
+
         btn.disabled = true;
         btn.innerText = "傳送中...";
 
@@ -185,54 +210,7 @@
         });
     }
 
-    // 啟動初始化
     init();
-<script>
-// 1. 當「姓名」選單變動時，自動檢查有沒有舊紀錄
-document.querySelector('[name="name"]').addEventListener('change', function() {
-  const userName = this.value;
-  const savedData = localStorage.getItem('order_cache_' + userName);
-  
-  if (savedData) {
-    const prefs = JSON.parse(savedData);
-    // 詢問使用者是否要帶入 (也可以改成直接帶入不詢問)
-    if (confirm('偵測到 ' + userName + ' 有上次的點餐紀錄，要自動填入嗎？')) {
-      fillOrder(prefs);
-    }
-  }
-});
-
-// 2. 填入資料的副程式
-function fillOrder(prefs) {
-  const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
-  days.forEach(day => {
-    if (prefs[day]) {
-      const radio = document.querySelector(`input[name="${day}"][value="${prefs[day]}"]`);
-      if (radio) radio.checked = true;
-    }
-  });
-  alert('已自動帶入習慣餐點！');
-}
-
-// 3. 在原本的「送出」按鈕執行時，順便儲存紀錄
-// 假設妳的表單 ID 是 orderForm，或者是綁定在 submit 按鈕上
-document.querySelector('form').addEventListener('submit', function() {
-  const userName = document.querySelector('[name="name"]').value;
-  if (!userName) return;
-
-  const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
-  const currentPrefs = {};
-  
-  days.forEach(day => {
-    const selected = document.querySelector(`input[name="${day}"]:checked`);
-    if (selected) {
-      currentPrefs[day] = selected.value;
-    }
-  });
-
-  // 儲存到瀏覽器記憶體
-  localStorage.setItem('order_cache_' + userName, JSON.stringify(currentPrefs));
-});
 </script>
 
 </body>
